@@ -7,6 +7,7 @@ from scipy.interpolate import griddata
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import math
+import os
 
 
 
@@ -634,25 +635,34 @@ def dist(p1, p2):
     return d
 
 
-def roi(ncfile, durations, window_size, distance_array):
+def roi(yearmax_path, roi_size):
     '''
     Calculates the ROI-parameters for each duration
-    :param ncfile: 
-    :param durations:
-    :param window_size:
-    :param distance_array:
-    :return:
+    :param path2yearmax: String
+        FIlepath to the ncdf files that contain the yearly maxima for every duration
+    :param roi_size: Int
+        Window size of the Region of Interest
+
+    :return: dictionary
+        Dictionary which contains for each duration another dictionary containing the four parameters for the ROI-method
     '''
-    center = window_size // 2
-    parm_names = ["g", "xi", "alpha", "m0"]
+    center = roi_size // 2
+    files = os.listdir(yearmax_path)
+    durations = [int(file[:2]) for file in files ]
+    parms_dict = dict.fromkeys(sorted(durations))
 
-    # create dictionary to store all the arrays
-    parms_dict = dict.fromkeys(durations)
+    #create the distance array
+    distance_array = np.zeros((roi_size, roi_size))
 
-    for i in range(len(durations)):
-        # open ncfile with yearmax values
-        nc = ncfile['rainfall_amount'].values
+    for row in range(roi_size):
+        for col in range(roi_size):
+            distance_array[row, col] = dist([center, center], [row, col])
 
+    for file in files:
+
+        print(f"{datetime.datetime.now()} Fitting ROI parameters for duration {file[:2]} h.")
+        nc = xr.open_dataset(f"{yearmax_path}/{file}")
+        nc = nc['rainfall_amount'].values
         nc = nc[:20, :, :]
 
         # pad with nan so no values will be lost. Otherwise np.slinding_window will return a smaller array
@@ -660,13 +670,17 @@ def roi(ncfile, durations, window_size, distance_array):
         # remove pads for the 3rd(time) dimension
         nc = nc[center:nc.shape[0] - center, :, :]
 
+        #create dictionary to store all the arrays
+        parm_names = ["g", "xi", "alpha", "m0"]
+        res = dict.fromkeys(parm_names)
+
+
         """
         Using this moving window approach one can save the padding when splitting up the array for multiprocessing.
-        Basically for each cell in the array there is the window stored as additionally dimensions. The window/cube for each
-        respective cell (x,y) can be accessed by: file[:, x, y, :, :]
-        by 
+        Basically for each cell in the array there is the window stored as additionally dimensions. The window/cube for
+        each respective cell (x,y) can be accessed by: file[:, x, y, :, :]
         """
-        nc = np.lib.stride_tricks.sliding_window_view(nc, window_shape=(window_size, window_size), axis=(1, 2))
+        nc = np.lib.stride_tricks.sliding_window_view(nc, window_shape=(roi_size, roi_size), axis=(1, 2))
 
         # arrays to store the results
         g_store = np.empty(shape=(nc.shape[1], nc.shape[2]))
@@ -678,8 +692,6 @@ def roi(ncfile, durations, window_size, distance_array):
         m0_store = np.empty(shape=(nc.shape[1], nc.shape[2]))
         m0_store[:] = np.nan
 
-        res = dict.fromkeys(parm_names)
-
         for row in range(nc.shape[1]):
             for col in range(nc.shape[2]):
                 weight_dist = weighting_f(distance_array, 1, 26)
@@ -690,7 +702,7 @@ def roi(ncfile, durations, window_size, distance_array):
                     continue
 
                 else:
-                    pwm_grid = np.zeros((3, window_size, window_size))
+                    pwm_grid = np.zeros((3, roi_size, roi_size))
 
                     for m in range(0, pwm_grid.shape[1]):
                         for n in range(0, pwm_grid.shape[2]):
@@ -725,11 +737,24 @@ def roi(ncfile, durations, window_size, distance_array):
                     alpha_store[row, col] = alpha
                     m0_store[row, col] = r[:, center, center].mean()
 
+        # dummy = pd.DataFrame(g_store)
+        # dummy.to_csv(f"roi_g_{file[:2]}.csv", header=False, index=False)
+        #
+        # dummy = pd.DataFrame(xi_store)
+        # dummy.to_csv(f"roi_xi_{file[:2]}.csv", header=False, index=False)
+        #
+        # dummy = pd.DataFrame(alpha_store)
+        # dummy.to_csv(f"roi_alpha_{file[:2]}.csv", header=False, index=False)
+        #
+        # dummy = pd.DataFrame(m0_store)
+        # dummy.to_csv(f"roi_m0_{file[:2]}.csv", header=False, index=False)
+
         res["g"] = g_store
         res["xi"] = xi_store
         res["alpha"] = alpha_store
         res["m0"] = m0_store
 
-        parms_dict[durations[i]] = res
+        current_duration = file[:2]
+        parms_dict[current_duration] = res
 
-        return parms_dict
+    return parms_dict
