@@ -10,7 +10,7 @@ doi of according publication:
 This repository provides example model code according to: 
 
 XXX Change Paper title
-**Wunsch, A., Liesch, T., Cinkus, G., Ravbar, N., Chen, Z., Mazzilli, N., Jourde, H., and Goldscheider, N.: Karst spring discharge modeling based on deep learning using spatially distributed input data, Hydrol. Earth Syst. Sci. Discuss. [preprint], https://doi.org/10.5194/hess-2021-403, in review, 2021.**
+**Voit, P. ; Heistermann, M.: Quantifying .....**
 
 Contact: [voit@uni-potsdam.de](voit@uni-potsdam.de)
 
@@ -20,7 +20,19 @@ P. Voit:  [0000-0003-1005-0979](https://orcid.org/0000-0003-1005-0979)
 
 For a detailed description please refer to the publication.
 
-HIer Infotext
+This repository contains examplary code and data to calculate the WEI and xWEI for all three methods of GEV-parameter
+estimation (cellwise-GEV, Region-of-interest, duration dependent GEV) for one selected event.
+Two Notebooks are included.  
+DESCREIBE NOTEBOOKS
 
+All the functions, including documentation, that are used are included in the file "xwei_functions.py".
 
-Please adapt all absolute loading/saving and software paths within the scripts to make them running, you Python software for a successful application. Our models are implemented in Python 3.8 (van Rossum, 1995) and we use the following libraries and frameworks: [Numpy](https://numpy.org/) (van der Walt et al., 2011), [Pandas](https://pandas.pydata.org/) (McKinney, 2010; Reback et al., 2020), [Scikit-Learn](https://scikit-learn.org/stable/) (Pedregosa et al., 2011), [Matplotlib](https://matplotlib.org/) (Hunter, 2007).
+The user can use the included .yaml file to create a conda environment which includes all the necessary
+packages. This can be done by:
+conda env create -f xwei.yml
+
+The code was implemented in Python 3.9. Used packages are Numpy (van der Walt et al., 2011), Pandas 
+(McKinney, 2010; Reback et al., 2020),
+Scikit-Learn (Pedregosa et al., 2011), Matplotlib (Hunter, 2007), xarray (Hoyer and Hamann, 2017) and netcdf4. To view the
+notebooks you need to have jupyter installed.
+
