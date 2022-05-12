@@ -4,3 +4,4 @@ subsets*
 .idea
 _pychache_
 debug_repo.py
+*backup

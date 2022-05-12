@@ -1,3 +1,11 @@
+'''
+12 May 2022, Paul Voit, voit@uni-potsdam.de
+This script contains all the functions which are used in the "example.ipynb"-Notebook
+'''
+
+
+
+
 import numpy as np
 import xarray as xr
 import datetime
