@@ -30,7 +30,7 @@ The code was implemented in `Python 3.9`. Used packages are Numpy (Harris et al.
 The user can use the included `xwei_env.yaml` file to create a conda environment which includes all the necessary
 packages. This can be done by:  
 `conda config --add channels conda-forge`  
-`conda config --set channel_priority strict`
+`conda config --set channel_priority strict`  
 `conda env create -f xwei_env.yml`
 
 Once the environment is installed it needs to be activated. Start the terminal of your choice and type:
