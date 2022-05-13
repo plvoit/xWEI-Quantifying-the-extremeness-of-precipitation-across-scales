@@ -46,12 +46,12 @@ can not be guaranteed that the packages work correctly.
 In this notebook we demonstrate the application of WEI and xWEI using three different methods
 (cellwise GEV, ROI, dGEV) for an examplary rainfall event (CatRaRE ID: 16058). This event caused
 the massive floodings in Braunsbach in May 2017. For methods the WEI and xWEI is computed and plotted.
-The used functions can be found in the script "xwei_functions.py".
+The used functions can be found in the script `xwei_functions.py.
 
 ## roi_parameter_fitting.ipynb
 This contains the functions which we used to derive the GEV parameters with Region-of-Interest method
 according to Burn (1990). Because this calculation is quite time consuming we supplied the parameter sets in
-"data/roi_parameters". The results achieved with this script will slightly differ from the parameter sets
+`data/roi_parameters`. The results achieved with this script will slightly differ from the parameter sets
 that we supplied. This is because we just use a small subset for one event here, 
 instead of whole Germany and therfore the ROI on the sides of the subset  contains no values.
 Running this script could take about 1.5 hours.
