@@ -9,7 +9,6 @@ doi of according publication:
 
 This repository provides example model code according to: 
 
-XXX Change Paper title
 **Voit, P. ; Heistermann, M.: Quantifying the extremeness of precipitation across scales**
 
 Contact: [voit@uni-potsdam.de](voit@uni-potsdam.de)
