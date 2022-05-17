@@ -1,4 +1,6 @@
 '''
+* Copyright (c) 2021-, Paul Voit
+* Creative Commons Attribution 4.0 International License
 12 May 2022, Paul Voit, voit@uni-potsdam.de
 This script contains all the functions which are used in the "example.ipynb"-Notebook
 '''

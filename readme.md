@@ -10,7 +10,7 @@ doi of according publication:
 This repository provides example model code according to: 
 
 XXX Change Paper title
-**Voit, P. ; Heistermann, M.: Quantifying .....**
+**Voit, P. ; Heistermann, M.: Quantifying the extremeness of precipitation across scales**
 
 Contact: [voit@uni-potsdam.de](voit@uni-potsdam.de)
 
@@ -26,7 +26,7 @@ estimation (cellwise-GEV, Region-of-interest, duration dependent GEV) for one se
 # Installation
 The code was implemented in `Python 3.9`. Used packages are Numpy (Harris et al., 2020), `Pandas`
 (McKinney, 2010), `Scikit-Learn` (Pedregosa et al., 2011), `Matplotlib` (Hunter, 2007),
-`xarray` (Hoyer and Hamann, 2017) and `netcdf4`. To view the notebooks you need to have jupyter installed.  
+`xarray` (Hoyer and Hamann, 2017) and `netcdf4`. To view the notebooks you need to have `jupyter` installed.  
 The user can use the included `xwei_env.yaml` file to create a conda environment which includes all the necessary
 packages. This can be done by:  
 `conda config --add channels conda-forge`  
@@ -45,8 +45,8 @@ can not be guaranteed that the packages work correctly.
 ## example_xwei.ipynb
 In this notebook we demonstrate the application of WEI and xWEI using three different methods
 (cellwise GEV, ROI, dGEV) for an examplary rainfall event (CatRaRE ID: 16058). This event caused
-the massive floodings in Braunsbach in May 2017. For methods the WEI and xWEI is computed and plotted.
-The used functions can be found in the script `xwei_functions.py.
+the massive floodings in Braunsbach in May 2017. For all the methods the WEI and xWEI is computed and plotted.
+The used functions can be found in the script `xwei_functions.py`.
 
 ## roi_parameter_fitting.ipynb
 This contains the functions which we used to derive the GEV parameters with Region-of-Interest method
@@ -58,23 +58,23 @@ Running this script could take about 1.5 hours.
 
 ## xwei_functiony.py
 This script contains all the functions that are used to calculate and visualize the WEI according to
-Müller and Kaspar (2014) and xWEI (Voit & Heistermann,XX).
+Müller and Kaspar (2014) and xWEI (Voit & Heistermann, 2022).
 The supplied functions can be applied to any 2D or 3D-data xarrays.
 Documentation is included.
 
 ## xwei_env.yml
 This file can be used to create a conda environment that includes all the necessary scripts to run the supplied
-scripts.
+scripts. See "Installation".
 
 # Included Data
 ## event_16058_200.nc
-This netcdf is a subset of the RADKLIM dataset (precipitation in hourly resolution) of 200 km bounding box around the centroid of the event
+This netcdf is a subset of the RADKLIM dataset (precipitation in hourly resolution, Winterrath et al., 2018) of 200 km bounding box around the centroid of the event
 (as specified in CatRaRE) from May 28 00:50 to 31 May 17:50. These extended temporal boundaries (compared to 
 the ones specified in CatRaRE) allow for a moving window 72h-aggregation for every hour of the event.
-This file is used in the process of calculation the EtA for every duration and for every hour of the event.
+This file is used in the process of calculation the Eta for every duration and for every hour of the event.
 
 ## yearmax_2001_2020
-This folder contains the yearly maxima of the RADKLIM dataset in netcdf format for the area of event_16058. This files can
+This folder contains the yearly maxima of the RADKLIM dataset in netcdf format for the area of event_16058. These files can
 be used to derive the GEV parameters with all three methods.
 
 ## dgev_parameters
@@ -83,7 +83,8 @@ the event_16058.
 
 ## gev_parameters
 This folder contains the GEV parameters derived with the R-package "extRemes" (Gilleland and Katz, 2016) for the region of
-the event_16058.
+the event_16058. We R instead of Python because the GEV fit using the `scipy` did not run as stable and produced
+many strange fits.
 
 ## roi_parameters
 This folder contains the GEV parameters for the region of the event_16058. This parameters were achieved
@@ -100,6 +101,8 @@ Hoyer, S. & Hamman, J., (2017). xarray: N-D labeled Arrays and Datasets in Pytho
 
 Data structures for statistical computing in python, McKinney, Proceedings of the 9th Python in Science Conference, Volume 445, 2010
 
+Gilleland, E. and Katz, R. W.: extRemes 2.0: an extreme value analysis package in R, Journal of Statistical Software, 72, 1–39, 2016.
+
 Müller, M. and Kaspar, M.: Event-adjusted evaluation of weather and climate extremes, Natural Hazards and Earth System Sciences, 14,
 473–483, publisher: Copernicus GmbH, 2014
 
@@ -108,6 +111,6 @@ Pedregosa, F. et al., 2011. Scikit-learn: Machine learning in Python. Journal of
 Ulrich, J., Ritschel, C., Mack, L., Jurado, O. E., Fauer, F. S., Detring, C., and Joedicke, S.: IDF: Estimation and Plotting of IDF Curves, R
 package version, 2, 2019.
 
-Gilleland, E. and Katz, R. W.: extRemes 2.0: an extreme value analysis package in R, Journal of Statistical Software, 72, 1–39, 2016.
-
-
+Winterrath, T., Brendel, C., Hafer, M., Junghänel, T., Klameth, A., Lengfeld, K., Walawender, E., Weigl, E., and Becker, A.: RAD-
+KLIM Version 2017.002: Reprocessed gauge-adjusted radar data, one-hour precipitation sums (RW), Deutscher Wetterdienst (DWD),
+https://doi.org/10.5676/DWD/RADKLIM_RW_V2017.002, 2018.
