@@ -2,7 +2,7 @@
 
 
 doi of this repo:  
-*will be added soon for first release*
+https://doi.org/10.5281/zenodo.6556446
 
 doi of according publication:  
 *XXXXXXXXXXXXXXXXX
