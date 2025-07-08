@@ -4,12 +4,11 @@
 doi of this repo:  
 https://doi.org/10.5281/zenodo.6556446
 
-doi of according publication:  
-*XXXXXXXXXXXXXXXXX
 
 This repository provides example model code according to: 
 
-**Voit, P. ; Heistermann, M.: Quantifying the extremeness of precipitation across scales**
+**Voit, P. ; Heistermann, M.: Quantifying the extremeness of precipitation across scales**  
+https://doi.org/10.5194/nhess-22-2791-2022, 2022.
 
 Contact: [voit@uni-potsdam.de](voit@uni-potsdam.de)
 
