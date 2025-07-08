@@ -6,8 +6,6 @@ This script contains all the functions which are used in the "example.ipynb"-Not
 '''
 
 
-
-
 import numpy as np
 import xarray as xr
 import datetime
@@ -20,8 +18,7 @@ import math
 import os
 
 
-
-def eta_gev(array, path2parameter_fits, duration_levels,
+def eta_gev(array, path2parameter_fits, duration_levels, cell_size_km2=1,
             nan_tolerance={'01': 1, '02': 2, '04': 4, '06': 6, '12': 11, '24': 22, '48': 36, '72': 60}, max_rp=1000):
     """
     Parameters
@@ -32,6 +29,8 @@ def eta_gev(array, path2parameter_fits, duration_levels,
     duration_levels: list of strings
             Durations for which the Eta should be computed. The according parameter files
             have to exist in the data folder. Example: ["01", "02", "04", "06", "12", "24", "48", "72"]
+    cell_size_km2: int/float, size of the grid cell in km². For RADKLIM and RADOLAN this is 1 but if other grids are used
+               the grid size needs to be given.
     nan_tolerance: Dictionary
             The higher the duration, the bigger the moving window. By default if the moving window just contains one4
              NaN, the resulting moving window sum is als NaN. With this dictionary the tolerance towards NaN can be
@@ -83,7 +82,7 @@ def eta_gev(array, path2parameter_fits, duration_levels,
 
         rp_array = 1 / (1 - Pu)
 
-        result = _calc_eta(max_rp, rp_array)
+        result = _calc_eta(max_rp, rp_array, cell_size)
 
         '''
         this dictionary contains all the Eta values for every timestep of the event and every duration.
@@ -103,7 +102,7 @@ def eta_gev(array, path2parameter_fits, duration_levels,
 
     return max_vals
 
-def eta_dgev(array, path2parameter_fits, duration_levels,
+def eta_dgev(array, path2parameter_fits, duration_levels, cell_size_km2=1,
              nan_tolerance={'01': 1, '02': 2, '04': 4, '06': 6, '12': 11, '24': 22, '48': 36, '72': 60}, max_rp=1000):
     """
     Calculation of return periods based on the concept of duration dependent GEV-curves. dGEV parameters were
@@ -126,6 +125,8 @@ def eta_dgev(array, path2parameter_fits, duration_levels,
     duration_levels: list of strings
             Durations for which the Eta should be computed. The according parameter files
             have to exist in the data folder. Example: ["01", "02", "04", "06", "12", "24", "48", "72"]
+    cell_size_km2: int/float, size of the grid cell in km². For RADKLIM and RADOLAN this is 1 but if other grids are used
+               the grid size needs to be given.
     nan_tolerance: Dictionary
             The higher the duration, the bigger the moving window. By default if the moving window just contains one4
              NaN, the resulting moving window sum is als NaN. With this dictionary the tolerance towards NaN can be
@@ -177,7 +178,7 @@ def eta_dgev(array, path2parameter_fits, duration_levels,
         # rp_array = make_rp_array_dgev(subset_subset, mod_loc_subset, scale_0_subset, shape_subset,
         #                              duration_offset_subset, duration_exp_subset, int(duration))
 
-        result = _calc_eta(max_rp, rp_array)
+        result = _calc_eta(max_rp, rp_array, cell_size)
 
         results_dict[duration] = result
 
@@ -192,7 +193,7 @@ def eta_dgev(array, path2parameter_fits, duration_levels,
     return max_vals
 
 
-def eta_roi(array, path2parameter_fits, duration_levels,
+def eta_roi(array, path2parameter_fits, duration_levels, cell_size_km2=1,
             nan_tolerance={'01': 1, '02': 2, '04': 4, '06': 6, '12': 11, '24': 22, '48': 36, '72': 60}, max_rp=1000):
     """
         Calculation of the return periods using the Region of Interest method (ROI), described by Burn (1990)
@@ -211,6 +212,8 @@ def eta_roi(array, path2parameter_fits, duration_levels,
     duration_levels: list of strings
             Durations for which the Eta should be computed. The according parameter files
             have to exist in the data folder. Example: ["01", "02", "04", "06", "12", "24", "48", "72"]
+    cell_size_km2: int/float, size of the grid cell in km². For RADKLIM and RADOLAN this is 1 but if other grids are used
+               the grid size needs to be given.
     nan_tolerance: Dictionary
             The higher the duration, the bigger the moving window. By default if the moving window just contains one4
              NaN, the resulting moving window sum is als NaN. With this dictionary the tolerance towards NaN can be
@@ -334,64 +337,96 @@ def _make_input_array(duration, max_duration, array, nan_tolerance):
     return subset
 
 
-def _calc_eta(max_rp, rp_array):
+def _calc_eta(max_rp, rp_array, cell_size_km2=1):
     """
-    This function calculates the Eta series according to Müller and Kaspar (2014) for every timestep within one duration
+    This function calculates the eta series for every timestep within one duration
     :param max_rp: Int. maximum possible return period
     :param rp_array: array with all the return periods
+    :param cell_size_km2: int/float, size of the grid cell in km². For RADKLIM and RADOLAN this is 1 but if other grids are used
+               the grid size needs to be given.
     :return: a list with all Eta-series for every timestep in one duration
     """
+
+    '''
+    correct all values exceeding max_return period threshold
+    this might conflict with the (dirty) fix below
+    '''
 
     if max_rp is not None:
         rp_array[rp_array > max_rp] = max_rp
 
-    result = list()
-    for j in range(0, (rp_array.shape[0])):
-        data = rp_array[j, :, :].flatten(order="c")
+    if len(rp_array.shape) > 2:
+        # if the array has more than one timestep WEI needs to be calculated for each of them
+        # and the one with highest maximum will be chosen in the end (?)
+        result = list()
+
+        for j in range(0, (rp_array.shape[0])):
+            data = rp_array[j, :, :].flatten(order="c")
+
+            '''
+            set nan to zero. check paper S.149
+            does this cause the floating point error/ runtime warning in get_log_Gta?
+            wouldn't it be better to set it to 1? does tis have an influence on the WEI?
+            Before nan was set to 0 causing runtime issues
+            '''
+            data[np.isnan(data)] = 1
+            '''
+            this is a dirty fix:
+            sometimes the GEV fit doesn't seem to work properly:
+            cells that have less precipitation than the maximum cell value observed
+            end up with a return period of infinite because the cdf of the gev distribution
+            resulted in zero. Of course it seems highly unlikely, especially in the case,
+            where it is neighbouring cells. This happens for example for Event 11 on the duration 06h.
+            Because the inf values mess with the following computation, all inf values will be set to the
+            maximum.To keep track of this manipulation, a log file should be written.'
+            21.12.21: This fix is obsolete now due to the infinte values 
+            which get set to the self.max_rp threshold except when self.max_rp == None
+            '''
+            if max_rp is None:
+                data[np.where(np.isinf(data))] = np.nanmax(data[data != np.inf])
+
+            data = np.sort(data)[::-1]
+
+            eta = _get_eta(data, cell_size_km2)
+
+            result.append(eta.round(3))
+
+    else:
+        # if rp_array 2D then this
+        data = rp_array[:, :].flatten(order="c")
+
+        # set nan to zero. check paper S.149
+        data[np.isnan(data)] = 1
 
         '''
-        set nan to zero. check paper S.149
-        does this cause the floating point error/ runtime warning in get_log_Gta?
-        wouldn't it be better to set it to 1? does tis have an influence on the WEI?
-        Before nan was set to 0 causing runtime issues
+        this is a dirty fix as above
         '''
-        data[np.isnan(data)] = 1
-        '''
-        this is a dirty fix:
-        sometimes the GEV fit doesn't seem to work properly:
-        cells that have less precipitation than the maximum cell value observed
-        end up with a return period of infinite because the cdf of the gev distribution
-        resulted in zero. Of course it seems highly unlikely, especially in the case,
-        where it is neighbouring cells. This happens for example for Event 11 on the duration 06h.
-        Because the inf values mess with the following computation, all inf values will be set to the
-        maximum.To keep track of this manipulation, a log file should be written.'
-        21.12.21: This fix is obsolete now due to the infinte values 
-        which get set to the self.max_rp threshold except when self.max_rp == None
-        '''
-        if max_rp is None:
-            data[np.where(np.isinf(data))] = np.nanmax(data[data != np.inf])
+        data[np.where(np.isinf(data))] = np.nanmax(data[data != np.inf])
 
         data = np.sort(data)[::-1]
 
-        eta = _get_eta(data)
+        eta = _get_eta(data, cell_size_km2)
 
-        result.append(eta.round(3))
-
+        result = eta.round(3)
 
     return result
 
 
-def _get_eta(data: np.array):
+def _get_eta(data: np.array, cell_size_km2=1):
     """
     Calculation of Eta according to Müller and Kaspar (2014)
     :param data: flattened array of return periods
+    :param cell_size_km2: int/float, size of the grid cell in km². For RADKLIM and RADOLAN this is 1 but if other grids are used
+               the grid size needs to be given.
     :return: np.array of Eta values
     """
     cumulated = np.cumsum(np.log(data))
-    size_cells = np.array([*range(len(data))]) + 1
-    log_gta = cumulated / size_cells
-    r = np.sqrt(size_cells) / np.sqrt(np.pi)
+    nr_cells = np.array([*range(len(data))]) + 1
+    log_gta = cumulated / nr_cells
+    area = nr_cells * cell_size_km2 #changed this to include different cell sizes
+    r = np.sqrt(area) / np.sqrt(np.pi)
     eta = log_gta * r
+
     return eta
 
 
@@ -426,6 +461,7 @@ def get_max_eta(results_dict: dict):
             #     areas_dict_new[key] = area_dict[key][i]
 
     return pd.DataFrame.from_dict(max_vals).round(2)
+
 
 def calc_xwei(eta_vals: pd.DataFrame, resolution=1000, precision=1, show_plot=False, rotate=45) -> float:
     """
@@ -601,6 +637,7 @@ def plot_eta(max_vals: pd.DataFrame):
 
     plt.show()
 
+
 def weighting_f(d, n, tp):
     """
     Function to calculate the weights based on the distance to the center of the raster for ROI-method. Center has weight one.
@@ -612,6 +649,7 @@ def weighting_f(d, n, tp):
     """
     mu = 1 - (d / tp) ** n
     return mu
+
 
 def PWM(x):
     """
@@ -631,6 +669,7 @@ def PWM(x):
         moments.append(mr)
 
     return moments
+
 
 def dist(p1, p2):
     """
